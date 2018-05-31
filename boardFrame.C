@@ -67,19 +67,7 @@ boardFrame::boardFrame(char *inFileName) {
 
   //  Allocate a board to fit those lines
 
-  _numOpen = 0;
-
-  maxX = maxLineLen;
-  maxY = linesLen;
-
-  fprintf(stderr, "boardFrame()-- initialize to maxX = %d, maxY = %d\n",
-          maxX, maxY);
-
-  boardAlloc = new int32   [maxX * maxY];
-  board      = new int32 * [maxX];
-
-  for (int32 x=0; x<maxX; x++)
-    board[x] = boardAlloc + x * maxY;
+  allocSpace(maxLineLen, linesLen);
 
   setBlocked();
 
@@ -93,4 +81,68 @@ boardFrame::boardFrame(char *inFileName) {
   //  Finish up.
 
   finalize();
+}
+
+
+
+
+void
+boardFrame::clearDisplay(void) {
+  memset(_displayAlloc, '.', sizeof(char) * 9 * _maxY * (_maxX + 1));
+
+  for (int32 y=0; y<3 * _maxY; y++)
+    _display[y][3 * (_maxX + 1) - 1] = 0;
+}
+
+
+
+void
+boardFrame::addPiece(int32 *cells,
+                     int32  cellsLen) {
+
+  int32  x[6];
+  int32  y[6];
+
+  for (int32 ii=0; ii<cellsLen; ii++) {
+    x[ii] = _idToX[ cells[ii] ];
+    y[ii] = _idToY[ cells[ii] ];
+    //fprintf(stdout, "ii=%d  %d, %d\n", ii, x[ii], y[ii]);
+  }
+
+  //  We'll draw, in each cell, a * in the middle.
+  //  Then, for each neighbor, a * towards the neighbor.
+
+  for (int32 ii=0;    ii<cellsLen; ii++) {
+    int32  dx = 3 * x[ii] + 1;
+    int32  dy = 3 * y[ii] + 1;
+
+    _display[dy-1][dx-1] = ' ';
+    _display[dy-1][dx  ] = ' ';
+    _display[dy-1][dx+1] = ' ';
+    _display[dy  ][dx-1] = ' ';
+    _display[dy  ][dx  ] = '+';
+    _display[dy  ][dx+1] = ' ';
+    _display[dy+1][dx-1] = ' ';
+    _display[dy+1][dx  ] = ' ';
+    _display[dy+1][dx+1] = ' ';
+
+    for (int32 jj=0; jj<cellsLen; jj++) {
+      //if (ii == 3)
+      //  fprintf(stdout, "  TEST ii %d, %d  jj %d, %d\n", x[ii], y[ii], x[jj], y[jj]);
+
+      if ((x[ii]-1 == x[jj]) && (y[ii]   == y[jj]))   _display[dy  ][dx-1] = '-';
+      if ((x[ii]   == x[jj]) && (y[ii]-1 == y[jj]))   _display[dy-1][dx  ] = '|';
+      if ((x[ii]   == x[jj]) && (y[ii]+1 == y[jj]))   _display[dy+1][dx  ] = '|';
+      if ((x[ii]+1 == x[jj]) && (y[ii]   == y[jj]))   _display[dy  ][dx+1] = '-';
+    }
+  }
+}
+
+
+
+void
+boardFrame::display(FILE *F) {
+
+  for (int32 y=3*_maxY; --y>=0; )
+    fprintf(F, "%s\n", _display[y]);
 }

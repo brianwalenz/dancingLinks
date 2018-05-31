@@ -7,18 +7,36 @@
 #include "hexomino.H"
 
 class boardFrame {
-public:
-  boardFrame(int32 maxX_, int32 maxY_) {
-    maxX = maxX_;
-    maxY = maxY_;
+private:
+  void   allocSpace(int32 maxX_, int32 maxY_) {
+    _maxX = maxX_;
+    _maxY = maxY_;
 
     _numOpen = 0;
 
-    boardAlloc = new int32   [maxX * maxY];
-    board      = new int32 * [maxX];
+    _idToX        = new int32   [_maxX * _maxY];
+    _idToY        = new int32   [_maxX * _maxY];
 
-    for (int32 x=0; x<maxX; x++)
-      board[x] = boardAlloc + x * maxY;
+    _boardAlloc   = new int32   [_maxX * _maxY];
+    _board        = new int32 * [_maxX];
+
+    memset(_boardAlloc, 0, sizeof(int32) * _maxX * _maxY);
+
+    _displayAlloc = new char    [9 * _maxY * (_maxX + 1)];
+    _display      = new char  * [3 * _maxY];
+
+    memset(_displayAlloc, 0, sizeof(char) * 9 * _maxY * (_maxX + 1));
+
+    for (int32 x=0; x<_maxX; x++)
+      _board[x]   = _boardAlloc + x * _maxY;
+
+    for (int32 y=0; y<3 * _maxY; y++)
+      _display[y] = _displayAlloc + y * 3 * (_maxX + 1);
+  };
+
+public:
+  boardFrame(int32 maxX_, int32 maxY_) {
+    allocSpace(maxX_, maxY_);
 
     setOpen();
   };
@@ -26,86 +44,93 @@ public:
   boardFrame(char *infile);
 
   ~boardFrame() {
-    delete [] boardAlloc;
-    delete [] board;
-  };
+    delete [] _idToX;
+    delete [] _idToY;
 
-  void      display(FILE *F, int32 offset=0) {
-    for (int32 y=maxY; --y>=0; ) {
-      for (int32 x=0; x<maxX; x++) {
-        if (isBlocked(x, y))
-          fprintf(F, " ****");
-        else
-          fprintf(F, "%5d", getIndex(x, y) + offset);
-      }
-      fprintf(F, "\n");
-    }
+    delete [] _boardAlloc;
+    delete [] _board;
+
+    delete [] _displayAlloc;
+    delete [] _display;
   };
 
 private:
   void      check(int32 x, int32 y) {
     assert(0 <= x);
     assert(0 <= y);
-    assert(x <  maxX);
-    assert(y <  maxY);
+    assert(x <  _maxX);
+    assert(y <  _maxY);
   };
 
 public:
   void      finalize(void) {
     _numOpen = 0;
 
-    for (int32 y=0; y<maxY; y++)
-    for (int32 x=0; x<maxX; x++)
-      if (board[x][y] < INT32_MAX)
-        board[x][y] = _numOpen++;
+    for (int32 y=0; y<_maxY; y++)
+    for (int32 x=0; x<_maxX; x++)
+      if (_board[x][y] < INT32_MAX) {
+        _board[x][y] = _numOpen;
+
+        _idToX[_numOpen] = x;
+        _idToY[_numOpen] = y;
+
+        _numOpen++;
+      }
   };
 
   void      setBlocked(void) {
-    for (int32 x=0; x<maxX; x++)
-    for (int32 y=0; y<maxY; y++)
-      board[x][y] = INT32_MAX;
+    for (int32 x=0; x<_maxX; x++)
+    for (int32 y=0; y<_maxY; y++)
+      _board[x][y] = INT32_MAX;
   };
 
   void      setOpen(void) {
-    for (int32 x=0; x<maxX; x++)
-    for (int32 y=0; y<maxY; y++)
-      board[x][y] = 0;
+    for (int32 x=0; x<_maxX; x++)
+    for (int32 y=0; y<_maxY; y++)
+      _board[x][y] = 0;
   };
 
-  int32     getIndex  (int32 x, int32 y)   { check(x, y);  return(board[x][y]);     };
+  int32     getIndex  (int32 x, int32 y)   { check(x, y);  return(_board[x][y]);     };
 
-  void      setBlocked(int32 x, int32 y)   { check(x, y);  board[x][y] = INT32_MAX; };
-  void      setOpen   (int32 x, int32 y)   { check(x, y);  board[x][y] = 0;         };
+  void      setBlocked(int32 x, int32 y)   { check(x, y);  _board[x][y] = INT32_MAX; };
+  void      setOpen   (int32 x, int32 y)   { check(x, y);  _board[x][y] = 0;         };
 
-  bool      isBlocked (int32 x, int32 y)   { return((x < 0) || (maxX <= x) || (y < 0) || (maxY <= y) || (board[x][y] == INT32_MAX));  };
-  bool      isOpen    (int32 x, int32 y)   { return((0 <= x) && (x < maxX) && (0 <= y) && (y < maxY) && (board[x][y] <  INT32_MAX));  };
+  bool      isBlocked (int32 x, int32 y)   { return((x < 0) || (_maxX <= x) || (y < 0) || (_maxY <= y) || (_board[x][y] == INT32_MAX));  };
+  bool      isOpen    (int32 x, int32 y)   { return((0 <= x) && (x < _maxX) && (0 <= y) && (y < _maxY) && (_board[x][y] <  INT32_MAX));  };
 
   bool      isBlocked (int32 x, int32 y, hexomino h) {
-    for (int32 ii=0; ii<h.numOmino(); ii++) {
-      //fprintf(stderr, "  at %d,%d -> %s\n",
-      //        x + h.x[ii],
-      //        y + h.y[ii],
-      //        isBlocked(x + h.x[ii], y + h.y[ii]) ? "blocked" : "open");
-
+    for (int32 ii=0; ii<h.numOmino(); ii++)
       if (isBlocked(x + h.x[ii], y + h.y[ii]))
         return(true);
-    }
+
     return(false);
   };
 
-  int32     Xsize(void)   { return(maxX);    };
-  int32     Ysize(void)   { return(maxY);    };
+  int32     Xsize(void)   { return(_maxX);    };
+  int32     Ysize(void)   { return(_maxY);    };
 
   int32     numOpen(void) { return(_numOpen); };
 
+
+  void      clearDisplay(void);
+  void      display(FILE *F);
+  void      addPiece(int32 *cells,
+                     int32  cellsLen);
+
 public:
-  int32     maxX;
-  int32     maxY;
+  int32     _maxX;
+  int32     _maxY;
 
-  int32    _numOpen;
+  int32     _numOpen;
 
-  int32    *boardAlloc;
-  int32   **board;
+  int32    *_idToX;
+  int32    *_idToY;
+
+  int32    *_boardAlloc;
+  int32   **_board;
+
+  char     *_displayAlloc;
+  char    **_display;
 };
 
 

@@ -125,7 +125,7 @@ main(int argc, char **argv) {
 
   fprintf(stderr, "Used %d cells in the matrix.\n", dl._nextCell);
 
-  dl.search(0);
+  dl.search(0, board);
 
   fprintf(stderr, "Finished.\n");
 

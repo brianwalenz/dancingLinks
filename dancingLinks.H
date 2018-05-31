@@ -14,8 +14,9 @@
 
 class column_t {
 public:
-  char       N[16];
-  uint32     C;      //  The column header for this column.
+  char       name[16];  //  Name of this column
+  uint32     id;        //  ID of this column, either an omino ID or a board cell ID.
+  uint32     C;         //  The column header for this column.
 };
 
 
@@ -71,17 +72,18 @@ public:
     int32  nCols = 1 + _maxOminoes + _maxCells;
 
     for (int32 cc=0; cc<nCols; cc++) {
-      _columns[cc].N[0] = 0;
-      _columns[cc].C    = cc;
+      _columns[cc].name[0] = 0;
+      _columns[cc].id      = 0;
+      _columns[cc].C       = cc;
 
-      _cells[cc].L      = (cc > 0)         ? cc - 1 : nCols - 1;
-      _cells[cc].R      = (cc + 1 < nCols) ? cc + 1 : 0;
+      _cells[cc].L         = (cc > 0)         ? cc - 1 : nCols - 1;
+      _cells[cc].R         = (cc + 1 < nCols) ? cc + 1 : 0;
 
-      _cells[cc].U      = cc;           //  So far, only us in the column list.
-      _cells[cc].D      = cc;
+      _cells[cc].U         = cc;           //  So far, only us in the column list.
+      _cells[cc].D         = cc;
 
-      _cells[cc].col    = cc;           //  Column header is this cell
-      _cells[cc].row    = UINT32_MAX;   //  Meaningless.
+      _cells[cc].col       = cc;           //  Column header is this cell
+      _cells[cc].row       = UINT32_MAX;   //  Meaningless.
     }
 
     //fprintf(stderr, " %3u <- %3u -> %3u\n", _cells[0].L, 0, _cells[0].R);
@@ -89,11 +91,13 @@ public:
     //  Set omino name.
 
     for (int32 cc=0; cc<_maxOminoes; cc++) {
-      sprintf(_columns[1 + cc].N, "o%d", cc);
+      _columns[1 + cc].id = cc;
+      sprintf(_columns[1 + cc].name, "o%d", cc);
     }
 
     for (int32 cc=0; cc<_maxCells; cc++) {
-      sprintf(_columns[1 + cc + _maxOminoes].N, "p%d", cc);
+      _columns[1 + cc + _maxOminoes].id = cc;
+      sprintf(_columns[1 + cc + _maxOminoes].name, "p%d", cc);
     }
 
     //  And move past the used cells.
@@ -135,10 +139,9 @@ public:
 
 #if 0
     fprintf(stderr, "addRow()-- row starting at cell %4d is omino %4s -- ",
-            c[0]->row,
-            _columns[ c[0]->col ].N);
+            c[0]->row, _columns[ c[0]->col ].name);
     for (int32 ii=0; ii<nf; ii++)
-      fprintf(stderr, " %4s", _columns[ c[1+ii]->col ].N);
+      fprintf(stderr, " %4s", _columns[ c[1+ii]->col ].name);
     fprintf(stderr, "\n");
 #endif
 
@@ -218,30 +221,43 @@ public:
   };
 
 
-  void         printSolution(int32 k) {
+  void         printSolution(int32 k, uint64 tested, boardFrame *board) {
+    int32  piece[6];
+    int32  pieceLen = 0;
 
-    fprintf(stdout, "search(%d)-- SOLVED!\n", k);
+    fprintf(stdout, "search(%d)-- SOLVED!  (%lu moves)\n", k, tested);
+
+    board->clearDisplay();
 
     for (int32 ss=0; ss<k; ss++) {
-      fprintf(stdout, "search(%d)-- placement %2d is omino %s at",
-              k, ss,
-              _columns[ _solution[ss]->col ].N);
+      //fprintf(stdout, "search(%d)-- placement %2d is omino %s at",
+      //        k, ss, _columns[ _solution[ss]->col ].name);
 
-      for (int32 oid = _cells[ _solution[ss]->row ].R; oid != _solution[ss]->row; oid = _cells[oid].R)
-        fprintf(stdout, " %s", _columns[ _cells[oid].col ].N);
+      pieceLen = 0;
 
-      fprintf(stdout, "\n");
+      for (int32 oid = _cells[ _solution[ss]->row ].R; oid != _solution[ss]->row; oid = _cells[oid].R) {
+        piece[pieceLen++] = _columns[ _cells[oid].col ].id;
+        //fprintf(stdout, " %s", _columns[ _cells[oid].col ].name);
+      }
+
+      board->addPiece(piece, pieceLen);
+
+      //fprintf(stdout, "\n");
     }
 
-    fprintf(stdout, "\n");
+    board->display(stdout);
+    //fprintf(stdout, "\n");
+
+    //exit(0);
   };
 
 
-  bool         search(int32 k) {
+  uint64       search(int32 k, boardFrame *board) {
+    uint64  tested = 0;
 
     if (_cells[0].R == 0) {
-      printSolution(k);
-      return(true);
+      printSolution(k, tested, board);
+      return(0);
     }
 
     //  Find the column with the smallest size
@@ -277,9 +293,7 @@ public:
       for (uint32 j = _cells[r].R; j != r; j = _cells[j].R)
         cover(_cells[j].col);
 
-      if (search(k+1) == true) {
-      //  fprintf(stderr, "search(%d)-- SOLVED - r %d\n", k, r);
-      }
+      tested += search(k+1, board) + 1;
 
       //assert(r == _solution[k]);
       assert(c == _cells[r].col);
@@ -290,8 +304,10 @@ public:
 
     uncover(c);
 
-    //fprintf(stderr, "search(%d)-- no solution\n", k);
-    return(false);    
+    if (k == 0)
+      fprintf(stderr, "search(%d)-- no solutions.  (%lu moves)\n", k, tested);
+
+    return(tested);
   };
 
 
