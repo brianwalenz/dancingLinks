@@ -145,4 +145,6 @@ boardFrame::display(FILE *F) {
 
   for (int32 y=3*_maxY; --y>=0; )
     fprintf(F, "%s\n", _display[y]);
+
+  fflush(F);
 }
