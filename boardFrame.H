@@ -22,16 +22,14 @@ private:
 
     memset(_boardAlloc, 0, sizeof(int32) * _maxX * _maxY);
 
-    _displayAlloc = new char    [9 * _maxY * (_maxX + 1)];
-    _display      = new char  * [3 * _maxY];
-
-    memset(_displayAlloc, 0, sizeof(char) * 9 * _maxY * (_maxX + 1));
-
     for (int32 x=0; x<_maxX; x++)
       _board[x]   = _boardAlloc + x * _maxY;
 
-    for (int32 y=0; y<3 * _maxY; y++)
-      _display[y] = _displayAlloc + y * 3 * (_maxX + 1);
+    _displayAlloc = new char    [(3 * _maxY + 1) * (3 * _maxX + 1)];
+    _display      = new char  * [(3 * _maxY + 1)];
+
+    for (int32 y=0; y<3 * _maxY + 1; y++)
+      _display[y] = _displayAlloc + y * (3 * _maxX + 1);
   };
 
 public:
@@ -76,6 +74,8 @@ public:
 
         _numOpen++;
       }
+
+    fprintf(stdout, "BOARD: %d x %d with %d open spaces\n", _maxX, _maxY, _numOpen);
   };
 
   void      setBlocked(void) {

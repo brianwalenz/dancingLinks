@@ -12,6 +12,16 @@ enum hexominoIteratorType {
   hexominoIteratorFixed    = 2    //  216 ominoes pre-rotated and flipped
 };
 
+inline
+const char *toString(hexominoIteratorType t) {
+  switch (t) {
+    case hexominoIteratorFree:      return("free");       break;
+    case hexominoIteratorOneSided:  return("one-sided");  break;
+    case hexominoIteratorFixed:     return("fixed");      break;
+  }
+  return("undefined");
+}
+
 
 
 class hexomino {
@@ -54,14 +64,13 @@ public:
 
   void   initialize(uint32 id_);
 
-
   void   rotate(void);       //  Rotate 90 degrees CW.
   void   flipY(void);        //  Flip about the Y axis.
   void   flipX(void);        //  Flip about the X axis.
   void   normalize(void);    //  Adjust coords so omino is adjacent to both the X and Y axes.
   void   sort(void);         //  Arrange coordinates in a standard form.
-  void   display(FILE *F);
 
+  void   display(FILE *F, int32 bx, int32 by);
 
   bool  operator==(const hexomino &h) {
     for (int32 ii=0; ii<numOmino(); ii++) {

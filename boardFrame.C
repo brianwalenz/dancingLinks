@@ -93,10 +93,20 @@ boardFrame::boardFrame(char *inFileName) {
 
 void
 boardFrame::clearDisplay(void) {
-  memset(_displayAlloc, '.', sizeof(char) * 9 * _maxY * (_maxX + 1));
+  int32  cells[1];
 
-  for (int32 y=0; y<3 * _maxY; y++)
-    _display[y][3 * (_maxX + 1) - 1] = 0;
+  memset(_displayAlloc, '.', sizeof(char) * (3 * _maxY + 1) * (3 * _maxX + 1));
+
+  for (int32 y=0; y<3 * _maxY + 1; y++)
+    _display[y][3 * _maxX] = 0;
+
+  for (int32 oo=0; oo<_numOpen; oo++) {
+    cells[0] = oo;
+    addPiece(cells, 1);
+  }
+
+  for (int32 xx=0; xx<3*_maxX; xx++)
+    _display[3 * _maxY][xx] = '-';
 }
 
 
@@ -148,8 +158,12 @@ boardFrame::addPiece(int32 *cells,
 void
 boardFrame::display(FILE *F) {
 
+  fprintf(F, "+-%s-+\n", _display[3 * _maxY]);
+
   for (int32 y=3*_maxY; --y>=0; )
-    fprintf(F, "%s\n", _display[y]);
+    fprintf(F, "| %s |\n", _display[y]);
+
+  fprintf(F, "+-%s-+\n", _display[3 * _maxY]);
 
   fflush(F);
 }

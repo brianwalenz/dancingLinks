@@ -182,11 +182,11 @@ hexomino::sort(void) {
 
 
 void
-hexomino::display(FILE *F) {
+hexomino::display(FILE *F, int32 bx, int32 by) {
   fprintf(F, "%3d -", id);
 
   for (int32 ii=0; ii<numOmino(); ii++)
-    fprintf(F, " %d,%d", x[ii], y[ii]);
+    fprintf(F, " %2d,%-2d", x[ii] + bx, y[ii] + by);
 
   fprintf(F, "\n");
 }
@@ -197,6 +197,14 @@ hexomino::display(FILE *F) {
 
 
 hexominoIterator::hexominoIterator(hexominoIteratorType t, uint32 nSegments, uint32 nCopies) {
+
+  fprintf(stdout, "\n");
+  fprintf(stdout, "Configure %s %u-ominoes with %u cop%s.\n",
+          toString(t), nSegments, nCopies, (nCopies == 1) ? "y" : "ies");
+  fprintf(stdout, "\n");
+  fprintf(stdout, "piece omino orient\n");
+  fprintf(stdout, "   ID    ID     ID\n");
+  fprintf(stdout, "----- ----- ------\n");
 
   //  Configure the omino size and number of copies allowed per piece.
 
@@ -280,20 +288,20 @@ hexominoIterator::hexominoIterator(hexominoIteratorType t, uint32 nSegments, uin
       //  Fixed    -- all rotations and flips refer to distinct pieces.
 
       if (t == hexominoIteratorFree) {
-        fprintf(stderr, "piece %4d is omino %2d orientation %d\n", _ominoPos, hh, b);
+        fprintf(stdout, "%5d %5d %6d\n", _ominoPos, hh, b);
         _omino[_ominoPos]    = r[b];
         _omino[_ominoPos].id = hh;
         _ominoPos++;
       }
 
       if (t == hexominoIteratorOneSided) {
-        fprintf(stderr, "piece %4d is omino %2d orientation %d\n", _ominoPos, hh, b);
+        fprintf(stdout, "%5d %5d %6d\n", _ominoPos, hh, b);
         _omino[_ominoPos]    = r[b];
         _omino[_ominoPos].id = hh;
         _ominoPos++;
 
         if (oneSided == true) {                //  Add one for the 'flipped' piece.
-          fprintf(stderr, "piece %4d is omino %2d orientation %d (one sided)\n", _ominoPos, ho, b+4);
+          fprintf(stdout, "%5d %5d %6d (one-sided)\n", _ominoPos, ho, b+4);
           _omino[_ominoPos]    = r[b+4];
           _omino[_ominoPos].id = ho;
           _ominoPos++;
@@ -301,7 +309,7 @@ hexominoIterator::hexominoIterator(hexominoIteratorType t, uint32 nSegments, uin
       }
 
       if (t == hexominoIteratorFixed) {
-        fprintf(stderr, "piece %4d is omino %2d orientation %d\n", _ominoPos, hh, b);
+        fprintf(stdout, "%5d %5d %6d\n", _ominoPos, hh, b);
         _omino[_ominoPos]    = r[b];
         _omino[_ominoPos].id = _ominoPos;
         _ominoPos++;
@@ -323,5 +331,5 @@ hexominoIterator::hexominoIterator(hexominoIteratorType t, uint32 nSegments, uin
     _maxOminoID = max(_maxOminoID, _omino[ii].id);
 
 
-  fprintf(stderr, "Assigned %d ominos to %d shapes.\n", _maxOminoID + 1, _ominoMax);
+  fprintf(stdout, "Assigned %d ominos to %d shapes.\n", _maxOminoID + 1, _ominoMax);
 }

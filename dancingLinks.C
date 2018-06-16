@@ -69,12 +69,14 @@ main(int argc, char **argv) {
   if (boardName) {
     board = new boardFrame(boardName);
     board->finalize();
+    board->clearDisplay();
     board->display(stdout);
   }
 
   else {
     board = new boardFrame(boardX, boardY);
     board->finalize();
+    board->clearDisplay();
     board->display(stdout);
   }
 
@@ -85,12 +87,10 @@ main(int argc, char **argv) {
   for (it->start(); it->valid(); it->next()) {
     hexomino h = it->omino();
 
-    h.display(stdout);
-
     for (int32 y=0; y<board->Ysize(); y++)
       for (int32 x=0; x<board->Xsize(); x++)
         if (board->isBlocked(x, y, h) == false) {
-          //fprintf(stdout, "               at %d,%d\n", x, y);
+          //h.display(stdout, x, y);
           ominoPlacements++;
         }
   }
