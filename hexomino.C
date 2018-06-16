@@ -197,14 +197,17 @@ hexomino::display(FILE *F, int32 bx, int32 by) {
 
 
 hexominoIterator::hexominoIterator(hexominoIteratorType t, uint32 nSegments, uint32 nCopies) {
+  bool  verbose = false;
 
-  fprintf(stdout, "\n");
-  fprintf(stdout, "Configure %s %u-ominoes with %u cop%s.\n",
-          toString(t), nSegments, nCopies, (nCopies == 1) ? "y" : "ies");
-  fprintf(stdout, "\n");
-  fprintf(stdout, "piece omino orient\n");
-  fprintf(stdout, "   ID    ID     ID\n");
-  fprintf(stdout, "----- ----- ------\n");
+  if (verbose) {
+    fprintf(stdout, "\n");
+    fprintf(stdout, "Configure %s %u-ominoes with %u cop%s.\n",
+            toString(t), nSegments, nCopies, (nCopies == 1) ? "y" : "ies");
+    fprintf(stdout, "\n");
+    fprintf(stdout, "piece omino orient\n");
+    fprintf(stdout, "   ID    ID     ID\n");
+    fprintf(stdout, "----- ----- ------\n");
+  }
 
   //  Configure the omino size and number of copies allowed per piece.
 
@@ -288,20 +291,23 @@ hexominoIterator::hexominoIterator(hexominoIteratorType t, uint32 nSegments, uin
       //  Fixed    -- all rotations and flips refer to distinct pieces.
 
       if (t == hexominoIteratorFree) {
-        fprintf(stdout, "%5d %5d %6d\n", _ominoPos, hh, b);
+        if (verbose)
+          fprintf(stdout, "%5d %5d %6d\n", _ominoPos, hh, b);
         _omino[_ominoPos]    = r[b];
         _omino[_ominoPos].id = hh;
         _ominoPos++;
       }
 
       if (t == hexominoIteratorOneSided) {
-        fprintf(stdout, "%5d %5d %6d\n", _ominoPos, hh, b);
+        if (verbose)
+          fprintf(stdout, "%5d %5d %6d\n", _ominoPos, hh, b);
         _omino[_ominoPos]    = r[b];
         _omino[_ominoPos].id = hh;
         _ominoPos++;
 
         if (oneSided == true) {                //  Add one for the 'flipped' piece.
-          fprintf(stdout, "%5d %5d %6d (one-sided)\n", _ominoPos, ho, b+4);
+          if (verbose)
+            fprintf(stdout, "%5d %5d %6d (one-sided)\n", _ominoPos, ho, b+4);
           _omino[_ominoPos]    = r[b+4];
           _omino[_ominoPos].id = ho;
           _ominoPos++;
@@ -309,7 +315,8 @@ hexominoIterator::hexominoIterator(hexominoIteratorType t, uint32 nSegments, uin
       }
 
       if (t == hexominoIteratorFixed) {
-        fprintf(stdout, "%5d %5d %6d\n", _ominoPos, hh, b);
+        if (verbose)
+          fprintf(stdout, "%5d %5d %6d\n", _ominoPos, hh, b);
         _omino[_ominoPos]    = r[b];
         _omino[_ominoPos].id = _ominoPos;
         _ominoPos++;
