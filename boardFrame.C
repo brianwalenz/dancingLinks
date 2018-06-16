@@ -20,6 +20,11 @@ public:
 
     _length = strlen(_line);
 
+    while ((_length > 0) && (isspace(_line[_length-1]))) {
+      _length--;
+      _line[_length] = 0;
+    }
+
     return(true);
   };
 
